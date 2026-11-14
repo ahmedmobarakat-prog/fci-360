@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>360 FCI — منصة طلاب الحاسبات والمعلومات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#4f46e5',
+              600: '#4338ca',
+              700: '#3730a3',
+              900: '#1e1b4b',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    html.dark body {
+      background-image: radial-gradient(#1e293b 1px, transparent 1px);
+    }
+    .ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-40 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('courses')">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-mono font-bold text-lg shadow-md">
+          &lt;o&gt;
+        </div>
+        <div>
+          <div class="font-extrabold text-base leading-tight ltr">Credit Hours 360 FCI</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">كلية الحاسبات والمعلومات</div>
+        </div>
+      </div>
+
+      <!-- Nav Tabs -->
+      <nav class="flex flex-wrap items-center gap-2 text-sm font-semibold">
+        <button onclick="switchTab('courses')" id="nav-courses" class="nav-btn px-3.5 py-1.5 rounded-full bg-indigo-600 text-white transition">المواد الدراسية</button>
+        <button onclick="switchTab('gpa')" id="nav-gpa" class="nav-btn px-3.5 py-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 transition">حاسبة الـ GPA</button>
+        <button onclick="switchTab('roadmap')" id="nav-roadmap" class="nav-btn px-3.5 py-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 transition">خريطة المذاكرة / الجدول</button>
+        <button onclick="openAddModal()" class="px-3.5 py-1.5 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 transition">+ إضافة محتوى</button>
+      </nav>
+
+      <!-- Search & Controls -->
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <input id="globalSearch" type="text" oninput="renderCourses()" placeholder="بحث سريع... /" class="w-44 sm:w-56 px-3.5 py-1.5 rounded-full text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <button onclick="exportData()" title="تصدير البيانات JSON" class="px-3 py-1.5 rounded-full text-xs font-mono font-bold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition">JSON</button>
+        <button onclick="toggleTheme()" id="themeBtn" title="تغيير المظهر" class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-base hover:scale-105 transition">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Hero Banner -->
+    <section class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800 mb-4">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        بوابة طلاب الساعات المعتمدة • محدثة للعام الجامعي 2026
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6 items-center">
+        <div class="lg:col-span-2">
+          <h1 class="text-2xl sm:text-4xl font-extrabold leading-snug mb-3">
+            منصة <span class="text-indigo-600 dark:text-indigo-400 ltr">360 FCI</span> — دليلك الشامل لمواد حاسبات ومعلومات
+          </h1>
+          <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-5">
+            محاضرات، سكاشن، ملخصات، امتحانات سابقة، وروابط <span class="font-mono font-semibold text-indigo-600 dark:text-indigo-400 ltr">Drive &amp; GitHub</span> في مكان واحد منظم لمتابعة إنجازك الدراسي لحظة بلحظة.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="switchTab('gpa')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow transition">
+              احسب معدلك GPA
+            </button>
+            <button onclick="openAddModal()" class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm transition">
+              إضافة محاضرة / مادة
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">إجمالي المقررات المتاحة</div>
+              <div id="statCourses" class="text-xl font-extrabold mt-0.5">14 مقرر دراسي</div>
+            </div>
+            <span class="text-2xl">📚</span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">نسبة إنجاز المذاكرة</div>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span id="statPercent" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">0% مكتمل</span>
+                <span id="statFraction" class="text-xs font-mono text-slate-500 ltr">0/0</span>
+              </div>
+            </div>
+            <span class="text-2xl">✅</span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">إجمالي الساعات المعتمدة</div>
+              <div id="statCredits" class="text-xl font-extrabold mt-0.5 ltr">Credit Hours 41</div>
+            </div>
+            <span class="text-2xl">🎓</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 1: COURSES -->
+    <section id="tab-courses">
+      <!-- Level Filter -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div class="flex flex-wrap gap-2" id="levelFilters">
+          <button onclick="setLevel('ALL')" data-level="ALL" class="level-btn px-4 py-2 rounded-xl text-sm font-bold bg-indigo-600 text-white">الكل (14)</button>
+          <button onclick="setLevel('Level 1')" data-level="Level 1" class="level-btn px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Level 1</button>
+          <button onclick="setLevel('Level 2')" data-level="Level 2" class="level-btn px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Level 2</button>
+          <button onclick="setLevel('Level 3')" data-level="Level 3" class="level-btn px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Level 3</button>
+          <button onclick="setLevel('Level 4')" data-level="Level 4" class="level-btn px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Level 4</button>
+        </div>
+        <button onclick="resetProgress()" class="text-xs text-rose-600 dark:text-rose-400 hover:underline">إعادة ضبط التقدم المحفوظ</button>
+      </div>
+
+      <!-- Courses Grid -->
+      <div id="coursesGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </section>
+
+    <!-- TAB 2: GPA CALCULATOR -->
+    <section id="tab-gpa" class="hidden">
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-extrabold">حاسبة المعدل التراكمي <span class="ltr text-indigo-600">(GPA 4.0 Scale)</span></h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">مخصصة لنظام الساعات المعتمدة لحساب المعدل الفصلي والتراكمي الجديد</p>
+          </div>
+          <button onclick="addGpaRow()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700">+ إضافة مادة للترم</button>
+        </div>
+
+        <!-- Previous GPA -->
+        <div class="grid sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 mb-6">
+          <div>
+            <label class="block text-xs font-bold mb-1">المعدل التراكمي السابق (CGPA) — اختياري</label>
+            <input id="prevGpa" type="number" step="0.01" min="0" max="4" placeholder="مثال: 3.45" oninput="calculateGPA()" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm ltr" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">عدد الساعات المنجزة سابقاً — اختياري</label>
+            <input id="prevHours" type="number" min="0" max="160" placeholder="مثال: 36" oninput="calculateGPA()" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm ltr" />
+          </div>
+        </div>
+
+        <!-- Current Semester Rows -->
+        <div id="gpaRows" class="space-y-3 mb-6"></div>
+
+        <!-- Results -->
+        <div class="grid sm:grid-cols-3 gap-4 p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-center">
+          <div>
+            <div class="text-xs text-slate-600 dark:text-slate-300">المعدل الفصلي (Semester GPA)</div>
+            <div id="resSemGpa" class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1 font-mono">0.00</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-600 dark:text-slate-300">المعدل التراكمي الجديد (CGPA)</div>
+            <div id="resCumGpa" class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">0.00</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-600 dark:text-slate-300">التقدير العام</div>
+            <div id="resStanding" class="text-2xl font-extrabold mt-1">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ROADMAP -->
+    <section id="tab-roadmap" class="hidden">
+      <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        <h2 class="text-2xl font-extrabold mb-2">خريطة المذاكرة والمسار الأكاديمي (Levels 1 – 4)</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">ترتيب المواد حسب المتطلبات السابقة (Prerequisites) وأولوية التطبيق العملي</p>
+        <div id="roadmapContent" class="space-y-6"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Course Details Modal -->
+  <div id="courseModal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full max-h-[88vh] overflow-y-auto p-6 shadow-2xl">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
+        <div>
+          <span id="modalBadge" class="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 ltr"></span>
+          <h3 id="modalTitle" class="text-xl font-extrabold mt-1"></h3>
+          <p id="modalDesc" class="text-xs text-slate-500 dark:text-slate-400 mt-1"></p>
+        </div>
+        <button onclick="closeCourseModal()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 font-bold hover:bg-rose-100 hover:text-rose-600 transition">✕</button>
+      </div>
+
+      <!-- Progress inside modal -->
+      <div class="mb-5">
+        <div class="flex justify-between text-xs font-bold mb-1">
+          <span>تقدمك في المقرر</span>
+          <span id="modalProgressText" class="font-mono ltr">0%</span>
+        </div>
+        <div class="w-full h-2.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+          <div id="modalProgressBar" class="h-full bg-emerald-500 transition-all duration-300" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Items Checklist -->
+      <div id="modalItems" class="space-y-2.5 mb-5"></div>
+
+      <!-- Quick Resources -->
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+        <div class="text-xs font-bold mb-2">روابط سريعة للمقرر:</div>
+        <div id="modalLinks" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Course / Item Modal -->
+  <div id="addModal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+        <h3 class="text-lg font-extrabold">إضافة مقرر دراسي جديد</h3>
+        <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 font-bold">✕</button>
+      </div>
+      <form onsubmit="saveNewCourse(event)" class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold mb-1">كود المادة</label>
+            <input id="newCode" required placeholder="مثال: CS305" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 ltr" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">المستوى</label>
+            <select id="newLevel" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+              <option value="Level 1">Level 1</option>
+              <option value="Level 2" selected>Level 2</option>
+              <option value="Level 3">Level 3</option>
+              <option value="Level 4">Level 4</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1">اسم المادة</label>
+          <input id="newTitle" required placeholder="مثال: Computer Networks" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold mb-1">عدد الساعات المعتمدة</label>
+            <input id="newCredits" type="number" min="1" max="6" value="3" required class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 ltr" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">التقنية / اللغة</label>
+            <input id="newTag" placeholder="مثال: Cisco / Wireshark" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 ltr" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1">رابط Drive أو GitHub (اختياري)</label>
+          <input id="newLink" type="url" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 ltr" />
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold mt-2">حفظ المقرر في المنصة</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const defaultCourses = [
+      {
+        id: 'cs101', code: 'CS101', level: 'Level 1', credits: 3, tag: 'C++',
+        title: 'Structured Programming (البرمجة الهيكلية)',
+        desc: 'أساسيات البرمجة، المتغيرات، الجمل الشرطية، الحلقات التكرارية، الدوال والمصفوفات بلغة C++.',
+        items: [
+          { id: 'c101_1', type: 'محاضرة', title: 'Lecture 1-2: Flowcharts, Variables & Data Types' },
+          { id: 'c101_2', type: 'محاضرة', title: 'Lecture 3-4: Control Flow & Loops (for / while)' },
+          { id: 'c101_3', type: 'سكشن', title: 'Lab 1: Problem Solving Sheets on Codeforces' },
+          { id: 'c101_4', type: 'محاضرة', title: 'Lecture 5-6: Functions, Arrays & Pointers' },
+          { id: 'c101_5', type: 'امتحان', title: 'ملخص الميدتيرم + نماذج امتحانات سابقة' }
+        ],
+        links: [
+          { label: 'Google Drive Folder', url: 'https://drive.google.com' },
+          { label: 'GitHub C++ Sheets', url: 'https://github.com' }
+        ]
+      },
+      {
+        id: 'ma101', code: 'MA101', level: 'Level 1', credits: 3, tag: 'Discrete Math',
+        title: 'Discrete Mathematics (الرياضيات المتقطعة)',
+        desc: 'المنطق الرياضي، المجموعات، العلاقات، نظرية الرسوم البيانية (Graphs & Trees) وخوارزمية Prim.',
+        items: [
+          { id: 'm101_1', type: 'محاضرة', title: 'Lecture 1-2: Propositional Logic & Truth Tables' },
+          { id: 'm101_2', type: 'محاضرة', title: 'Lecture 3-4: Set Theory, Relations & Functions' },
+          { id: 'm101_3', type: 'محاضرة', title: 'Lecture 5-6: Graph Theory, Shortest Path & Prim’s MST' },
+          { id: 'm101_4', type: 'سكشن', title: 'Section Sheets: Discrete Math Solved Problems' }
+        ],
+        links: [
+          { label: 'Drive Summaries', url: 'https://drive.google.com' },
+          { label: 'YouTube Playlist', url: 'https://youtube.com' }
+        ]
+      },
+      {
+        id: 'is101', code: 'IS101', level: 'Level 1', credits: 3, tag: 'Info Systems',
+        title: 'Fundamentals of Information Systems',
+        desc: 'مفاهيم نظم المعلومات، مكونات البنية التحتية، دورة حياة النظم وتطبيقات الأعمال الرقمية.',
+        items: [
+          { id: 'i101_1', type: 'محاضرة', title: 'Lecture 1-2: Introduction to IS & Value Chain' },
+          { id: 'i101_2', type: 'محاضرة', title: 'Lecture 3-4: Hardware, Software & Cloud Basics' },
+          { id: 'i101_3', type: 'ملخص', title: 'بنك أسئلة MCQ شامل للمادة' }
+        ],
+        links: [{ label: 'Drive Materials', url: 'https://drive.google.com' }]
+      },
+      {
+        id: 'hu101', code: 'HU101', level: 'Level 1', credits: 2, tag: 'Technical Writing',
+        title: 'Technical Writing & Documentation',
+        desc: 'كتابة التقارير الهندسية والبرمجية، توثيق المشاريع (SRS)، والعروض التقديمية الاحترافية.',
+        items: [
+          { id: 'h101_1', type: 'محاضرة', title: 'Lecture 1-2: Principles of Technical Communication' },
+          { id: 'h101_2', type: 'عملي', title: 'LaTeX & Overleaf Report Template Workshop' },
+          { id: 'h101_3', type: 'ملخص', title: 'نماذج تقارير ومراجعة النهائي' }
+        ],
+        links: [{ label: 'Overleaf Templates', url: 'https://www.overleaf.com' }]
+      },
+      {
+        id: 'cs201', code: 'CS201', level: 'Level 2', credits: 3, tag: 'C# / OOP',
+        title: 'Object-Oriented Programming (البرمجة كائنية التوجه)',
+        desc: 'مبادئ Encapsulation, Inheritance, Polymorphism, Abstraction وتصميم تطبيقات سطح المكتب بلغة C#.',
+        items: [
+          { id: 'c201_1', type: 'محاضرة', title: 'Lecture 1-2: Classes, Objects & Constructors' },
+          { id: 'c201_2', type: 'محاضرة', title: 'Lecture 3-4: Inheritance, Interfaces & Polymorphism' },
+          { id: 'c201_3', type: 'سكشن', title: 'Lab: C# Architecture & Collections Project' },
+          { id: 'c201_4', type: 'امتحان', title: 'تجميعات امتحانات OOP العملي والنظري' }
+        ],
+        links: [
+          { label: 'GitHub C# Repo', url: 'https://github.com' },
+          { label: 'Drive Slides', url: 'https://drive.google.com' }
+        ]
+      },
+      {
+        id: 'cs202', code: 'CS202', level: 'Level 2', credits: 3, tag: 'Algorithms',
+        title: 'Data Structures & Algorithms (هياكل البيانات)',
+        desc: 'تحليل التعقيد الزمني Big-O، القوائم المترابطة، المكدسات، الطوابير، الأشجار الثنائية والبحث والترتيب.',
+        items: [
+          { id: 'c202_1', type: 'محاضرة', title: 'Lecture 1: Time & Space Complexity (Big-O)' },
+          { id: 'c202_2', type: 'محاضرة', title: 'Lecture 2-3: Linked Lists, Stacks & Queues' },
+          { id: 'c202_3', type: 'محاضرة', title: 'Lecture 4-5: Binary Search Trees (BST) & Heaps' },
+          { id: 'c202_4', type: 'سكشن', title: 'Lab: Implementing Data Structures from Scratch' }
+        ],
+        links: [{ label: 'GitHub Implementations', url: 'https://github.com' }]
+      },
+      {
+        id: 'is201', code: 'IS201', level: 'Level 2', credits: 3, tag: 'UML / N-Tier',
+        title: 'Systems Analysis & Design (تحليل وتصميم النظم)',
+        desc: 'نمذجة النظم باستخدام UML، مخططات Use Case, Class, Sequence، ومعمارية الطبقات N-Tier.',
+        items: [
+          { id: 'i201_1', type: 'محاضرة', title: 'Lecture 1-2: SDLC & Agile Methodologies' },
+          { id: 'i201_2', type: 'محاضرة', title: 'Lecture 3-4: Use Case, Activity & Sequence Diagrams' },
+          { id: 'i201_3', type: 'سكشن', title: 'Case Study: N-Tier Architecture & Value Chain' },
+          { id: 'i201_4', type: 'ملخص', title: 'ملخص مخططات UML وأسئلة الامتحانات' }
+        ],
+        links: [{ label: 'Drive Case Studies', url: 'https://drive.google.com' }]
+      },
+      {
+        id: 'is202', code: 'IS202', level: 'Level 2', credits: 3, tag: 'SQL Server',
+        title: 'Database Management Systems (قواعد البيانات)',
+        desc: 'تصميم ERD، التطبيع Normalization، واستعلامات SQL المتقدمة والعلاقات والقيود.',
+        items: [
+          { id: 'i202_1', type: 'محاضرة', title: 'Lecture 1-2: ER & Enhanced ER Modeling' },
+          { id: 'i202_2', type: 'محاضرة', title: 'Lecture 3-4: Relational Mapping & Normalization (1NF-3NF)' },
+          { id: 'i202_3', type: 'سكشن', title: 'Lab: SQL Queries, Joins & Stored Procedures' }
+        ],
+        links: [{ label: 'SQL Practice Sheets', url: 'https://drive.google.com' }]
+      },
+      {
+        id: 'it201', code: 'IT201', level: 'Level 2', credits: 3, tag: 'HTML/CSS/JS',
+        title: 'Web Technologies (تطوير تطبيقات الويب)',
+        desc: 'بناء واجهات الويب المتجاوبة باستخدام HTML5, CSS3, JavaScript والتعامل مع DOM و APIs.',
+        items: [
+          { id: 't201_1', type: 'محاضرة', title: 'Lecture 1-2: Semantic HTML5 & Modern CSS Grid/Flexbox' },
+          { id: 't201_2', type: 'محاضرة', title: 'Lecture 3-4: JavaScript ES6+, DOM & LocalStorage' },
+          { id: 't201_3', type: 'سكشن', title: 'Lab: Deploy Static Web App on Netlify / GitHub Pages' }
+        ],
+        links: [{ label: 'MDN & Starter Repo', url: 'https://github.com' }]
+      },
+      {
+        id: 'mg201', code: 'MG201', level: 'Level 2', credits: 3, tag: 'PMBOK / Agile',
+        title: 'Project Management (إدارة المشروعات)',
+        desc: 'دورة حياة المشروع (Project Life Cycle)، تخطيط النطاق والجدول الزمني، إدارة المخاطر والفرق البرمجية.',
+        items: [
+          { id: 'g201_1', type: 'محاضرة', title: 'Lecture 1-2: Project Life Cycle Phases & Stakeholders' },
+          { id: 'g201_2', type: 'محاضرة', title: 'Lecture 3-4: WBS, Gantt Charts & Critical Path (CPM)' },
+          { id: 'g201_3', type: 'ملخص', title: 'ملخص شامل لدورة حياة المشروع + أسئلة مراجعة' }
+        ],
+        links: [{ label: 'Drive Lectures', url: 'https://drive.google.com' }]
+      },
+      {
+        id: 'cs301', code: 'CS301', level: 'Level 3', credits: 3, tag: 'Linux / C',
+        title: 'Operating Systems (نظم التشغيل)',
+        desc: 'إدارة العمليات Processes & Threads، جدولة المعالج CPU Scheduling، إدارة الذاكرة والتزامن.',
+        items: [
+          { id: 'c301_1', type: 'محاضرة', title: 'Lecture 1-2: OS Architecture, Processes & Threads' },
+          { id: 'c301_2', type: 'محاضرة', title: 'Lecture 3-4: CPU Scheduling & Deadlocks' },
+          { id: 'c301_3', type: 'سكشن', title: 'Lab: Linux Shell & Process Synchronization' }
+        ],
+        links: [{ label: 'Drive OS Notes', url: 'https://drive.google.com' }]
+      },
+      {
+        id: 'cs302', code: 'CS302', level: 'Level 3', credits: 3, tag: 'DP / Greedy',
+        title: 'Design & Analysis of Algorithms',
+        desc: 'استراتيجيات Divide & Conquer, Greedy Algorithms, Dynamic Programming وخوارزميات الرسوم البيانية.',
+        items: [
+          { id: 'c302_1', type: 'محاضرة', title: 'Lecture 1-2: Recurrence Relations & Master Theorem' },
+          { id: 'c302_2', type: 'محاضرة', title: 'Lecture 3-4: Greedy & Dynamic Programming' },
+          { id: 'c302_3', type: 'سكشن', title: 'Problem Solving: DP & Graph Optimization' }
+        ],
+        links: [{ label: 'Algorithm Sheets', url: 'https://github.com' }]
+      },
+      {
+        id: 'cs303', code: 'CS303', level: 'Level 3', credits: 3, tag: 'Software Eng',
+        title: 'Software Engineering (هندسة البرمجيات)',
+        desc: 'هندسة المتطلبات، أنماط التصميم Design Patterns، اختبار البرمجيات وضمان الجودة.',
+        items: [
+          { id: 'c303_1', type: 'محاضرة', title: 'Lecture 1-2: Requirements Engineering & SRS' },
+          { id: 'c303_2', type: 'محاضرة', title: 'Lecture 3-4: SOLID Principles & Design Patterns' },
+          { id: 'c303_3', type: 'محاضرة', title: 'Lecture 5: Unit Testing & CI/CD Pipelines' }
+        ],
+        links: [{ label: 'Drive Slides', url: 'https://drive.google.com' }]
+      },
+      {
+        id: 'cs401', code: 'CS401', level: 'Level 4', credits: 3, tag: 'Python / AI',
+        title: 'Artificial Intelligence & Machine Learning',
+        desc: 'خوارزميات البحث الذكي، التعلم الخاضع للإشراف وغير الخاضع للإشراف، والشبكات العصبية بلغة Python.',
+        items: [
+          { id: 'c401_1', type: 'محاضرة', title: 'Lecture 1-2: Uninformed & Heuristic Search (A*)' },
+          { id: 'c401_2', type: 'محاضرة', title: 'Lecture 3-4: Supervised Learning & Neural Networks' },
+          { id: 'c401_3', type: 'سكشن', title: 'Lab: Python, NumPy, Pandas & Scikit-Learn' }
+        ],
+        links: [{ label: 'GitHub Notebooks', url: 'https://github.com' }]
+      }
+    ];
+
+    let courses = JSON.parse(localStorage.getItem('fci360_courses')) || defaultCourses;
+    let completed = JSON.parse(localStorage.getItem('fci360_completed')) || {};
+    let currentLevel = 'ALL';
+    let activeCourseId = null;
+
+    function saveState() {
+      localStorage.setItem('fci360_courses', JSON.stringify(courses));
+      localStorage.setItem('fci360_completed', JSON.stringify(completed));
+      updateStats();
+    }
+
+    function updateStats() {
+      const totalCourses = courses.length;
+      const totalCredits = courses.reduce((sum, c) => sum + Number(c.credits || 0), 0);
+      let totalItems = 0;
+      let doneItems = 0;
+      courses.forEach(c => {
+        c.items.forEach(item => {
+          totalItems++;
+          if (completed[item.id]) doneItems++;
+        });
+      });
+      const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
+      document.getElementById('statCourses').textContent = `${totalCourses} مقرر دراسي`;
+      document.getElementById('statCredits').textContent = `Credit Hours ${totalCredits}`;
+      document.getElementById('statFraction').textContent = `${doneItems}/${totalItems}`;
+      document.getElementById('statPercent').textContent = `${pct}% مكتمل`;
+    }
+
+    function setLevel(lvl) {
+      currentLevel = lvl;
+      document.querySelectorAll('.level-btn').forEach(btn => {
+        const active = btn.dataset.level === lvl;
+        btn.className = active
+          ? 'level-btn px-4 py-2 rounded-xl text-sm font-bold bg-indigo-600 text-white'
+          : 'level-btn px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800';
+      });
+      renderCourses();
+    }
+
+    function renderCourses() {
+      const q = document.getElementById('globalSearch').value.trim().toLowerCase();
+      const grid = document.getElementById('coursesGrid');
+      const filtered = courses.filter(c => {
+        const matchLvl = currentLevel === 'ALL' || c.level === currentLevel;
+        const matchQ = !q || c.title.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.tag.toLowerCase().includes(q);
+        return matchLvl && matchQ;
+      });
+
+      grid.innerHTML = filtered.map(c => {
+        const total = c.items.length;
+        const done = c.items.filter(i => completed[i.id]).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        return `
+          <article onclick="openCourseModal('${c.id}')" class="group cursor-pointer rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 ltr">${c.code} • ${c.level}</span>
+                <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 ltr">${c.credits} CH</span>
+              </div>
+              <h3 class="text-lg font-extrabold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition mb-1.5">${c.title}</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">${c.desc}</p>
+            </div>
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1.5">
+                <span class="px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-mono ltr">${c.tag}</span>
+                <span class="font-mono font-bold text-slate-600 dark:text-slate-300 ltr">${done}/${total} (${pct}%)</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div class="h-full bg-indigo-600 transition-all duration-300" style="width:${pct}%"></div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function openCourseModal(id) {
+      activeCourseId = id;
+      const c = courses.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('modalBadge').textContent = `${c.code} • ${c.level} • ${c.credits} Credit Hours`;
+      document.getElementById('modalTitle').textContent = c.title;
+      document.getElementById('modalDesc').textContent = c.desc;
+
+      const total = c.items.length;
+      const done = c.items.filter(i => completed[i.id]).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('modalProgressText').textContent = `${done}/${total} (${pct}%)`;
+      document.getElementById('modalProgressBar').style.width = `${pct}%`;
+
+      document.getElementById('modalItems').innerHTML = c.items.map(item => {
+        const checked = !!completed[item.id];
+        return `
+          <label class="flex items-center justify-between gap-3 p-3 rounded-2xl border ${checked ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'} cursor-pointer">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleItem('${item.id}')" class="w-4 h-4 accent-emerald-600 rounded" />
+              <span class="text-sm font-semibold ${checked ? 'line-through text-slate-400' : ''}">${item.title}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-md text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">${item.type}</span>
+          </label>
+        `;
+      }).join('');
+
+      document.getElementById('modalLinks').innerHTML = (c.links || []).map(l => `
+        <a href="${l.url}" target="_blank" rel="noopener" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition ltr">↗ ${l.label}</a>
+      `).join('');
+
+      document.getElementById('courseModal').classList.remove('hidden');
+    }
+
+    function toggleItem(itemId) {
+      completed[itemId] = !completed[itemId];
+      saveState();
+      renderCourses();
+      if (activeCourseId) openCourseModal(activeCourseId);
+    }
+
+    function closeCourseModal() {
+      document.getElementById('courseModal').classList.add('hidden');
+      activeCourseId = null;
+    }
+
+    function switchTab(tab) {
+      ['courses', 'gpa', 'roadmap'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`nav-${t}`);
+        if (btn) {
+          btn.className = t === tab
+            ? 'nav-btn px-3.5 py-1.5 rounded-full bg-indigo-600 text-white transition'
+            : 'nav-btn px-3.5 py-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 transition';
+        }
+      });
+      if (tab === 'roadmap') renderRoadmap();
+    }
+
+    // GPA Calculator
+    const gradePoints = {
+      'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+      'D+': 1.3, 'D': 1.0, 'F': 0.0
+    };
+
+    function addGpaRow(name = '', credits = 3, grade = 'A') {
+      const row = document.createElement('div');
+      row.className = 'gpa-row grid grid-cols-12 gap-2 items-center';
+      row.innerHTML = `
+        <input type="text" value="${name}" placeholder="اسم المادة (مثال: OOP)" class="col-span-6 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm" />
+        <input type="number" min="1" max="6" value="${credits}" oninput="calculateGPA()" class="gpa-credits col-span-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-center ltr" />
+        <select onchange="calculateGPA()" class="gpa-grade col-span-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono ltr">
+          ${Object.keys(gradePoints).map(g => `<option value="${g}" ${g === grade ? 'selected' : ''}>${g} (${gradePoints[g].toFixed(1)})</option>`).join('')}
+        </select>
+        <button onclick="this.parentElement.remove(); calculateGPA();" class="col-span-1 text-rose-500 font-bold hover:scale-110">✕</button>
+      `;
+      document.getElementById('gpaRows').appendChild(row);
+      calculateGPA();
+    }
+
+    function calculateGPA() {
+      let semPoints = 0;
+      let semHours = 0;
+      document.querySelectorAll('.gpa-row').forEach(r => {
+        const ch = Number(r.querySelector('.gpa-credits').value) || 0;
+        const gr = r.querySelector('.gpa-grade').value;
+        semHours += ch;
+        semPoints += ch * (gradePoints[gr] ?? 0);
+      });
+      const semGpa = semHours ? semPoints / semHours : 0;
+
+      const prevGpa = Number(document.getElementById('prevGpa').value) || 0;
+      const prevHours = Number(document.getElementById('prevHours').value) || 0;
+      const totalHours = prevHours + semHours;
+      const cumGpa = totalHours ? ((prevGpa * prevHours) + semPoints) / totalHours : semGpa;
+
+      document.getElementById('resSemGpa').textContent = semGpa.toFixed(2);
+      document.getElementById('resCumGpa').textContent = cumGpa.toFixed(2);
+
+      let standing = 'ضعيف (Probation)';
+      if (cumGpa >= 3.5) standing = 'ممتاز (Excellent)';
+      else if (cumGpa >= 3.0) standing = 'جيد جداً (Very Good)';
+      else if (cumGpa >= 2.5) standing = 'جيد (Good)';
+      else if (cumGpa >= 2.0) standing = 'مقبول (Pass)';
+      document.getElementById('resStanding').textContent = totalHours ? standing : '—';
+    }
+
+    // Roadmap
+    function renderRoadmap() {
+      const levels = ['Level 1', 'Level 2', 'Level 3', 'Level 4'];
+      document.getElementById('roadmapContent').innerHTML = levels.map(lvl => {
+        const list = courses.filter(c => c.level === lvl);
+        return `
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-3 ltr">${lvl} (${list.reduce((s, c) => s + c.credits, 0)} Credit Hours)</div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${list.map(c => `
+                <div onclick="openCourseModal('${c.id}')" class="cursor-pointer p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition">
+                  <div class="text-xs font-mono font-bold text-slate-500 ltr">${c.code} • ${c.tag}</div>
+                  <div class="text-sm font-bold mt-0.5">${c.title}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Add Course Modal
+    function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); }
+    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
+
+    function saveNewCourse(e) {
+      e.preventDefault();
+      const code = document.getElementById('newCode').value.trim().toUpperCase();
+      const level = document.getElementById('newLevel').value;
+      const title = document.getElementById('newTitle').value.trim();
+      const credits = Number(document.getElementById('newCredits').value) || 3;
+      const tag = document.getElementById('newTag').value.trim() || 'FCI';
+      const link = document.getElementById('newLink').value.trim();
+
+      courses.push({
+        id: 'c_' + Date.now(),
+        code, level, credits, tag, title,
+        desc: `مقرر مضاف يدوياً ضمن ${level} بنظام الساعات المعتمدة.`,
+        items: [
+          { id: 'i_' + Date.now() + '_1', type: 'محاضرة', title: 'Lecture 1: Introduction & Course Syllabus' },
+          { id: 'i_' + Date.now() + '_2', type: 'سكشن', title: 'Lab 1: Practical Exercises' }
+        ],
+        links: link ? [{ label: 'Course Resource', url: link }] : []
+      });
+
+      saveState();
+      renderCourses();
+      closeAddModal();
+      e.target.reset();
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify({ courses, completed }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '360-fci-data.json';
+      a.click();
+    }
+
+    function resetProgress() {
+      if (confirm('هل تريد مسح علامات الإنجاز المحفوظة؟')) {
+        completed = {};
+        saveState();
+        renderCourses();
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      localStorage.setItem('fci360_theme', isDark ? 'dark' : 'light');
+      document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Init
+    if (localStorage.getItem('fci360_theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.getElementById('themeBtn').textContent = '☀️';
+    }
+    updateStats();
+    renderCourses();
+    addGpaRow('Object-Oriented Programming', 3, 'A');
+    addGpaRow('Data Structures & Algorithms', 3, 'A-');
+    addGpaRow('Systems Analysis & Design', 3, 'B+');
+    addGpaRow('Database Management Systems', 3, 'A');
+  </script>
+</body>
+</html>
